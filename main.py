@@ -1,9 +1,8 @@
 import os
 import structlog
-from typing import TypedDict, Annotated, List
+from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 from google import genai
-from google.genai import types
 
 logger = structlog.get_logger()
 
@@ -70,4 +69,30 @@ workflow.add_edge("revenue_optimizer", END)
 app_graph = workflow.compile()
 
 if __name__ == "__main__":
-    print("🚀 Revenue Engineering Multi-Agent System Initialized successfully.")
+    print("🚀 Initializing Revenue Engineering Multi-Agent System...")
+    
+    # تجربة تشغيل النظام على مشروع افتراضي مبدئي
+    initial_state = {
+        "task": "An AI-powered automated code review and DevOps optimization SaaS for digital startups.",
+        "market_analysis": "",
+        "strategy": "",
+        "revenue_forecast": "",
+        "messages": []
+    }
+    
+    print("\n⏳ Running the agent graph pipeline...")
+    final_state = app_graph.invoke(initial_state)
+    
+    print("\n================ 📊 EXECUTION RESULTS ================")
+    for msg in final_state["messages"]:
+        print(f"✅ {msg}")
+        
+    print("\n--- 🌐 Market Analysis ---")
+    print(final_state["market_analysis"][:300] + "...\n")
+    
+    print("--- 💡 Strategy Formulated ---")
+    print(final_state["strategy"][:300] + "...\n")
+    
+    print("--- 💰 Revenue Forecast ---")
+    print(final_state["revenue_forecast"][:300] + "...\n")
+    print("======================================================")
