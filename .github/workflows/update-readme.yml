@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Initialize Database
+        run: python scripts/init_database.py
+
       - name: Run README updater
         run: python scripts/update_readme.py
 
