@@ -1,18 +1,49 @@
+# Agent Economy Core
 
-# Revenue Engineering Agent
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-AGPL--3.0-green)](LICENSE)
+[![Workers](https://img.shields.io/badge/Workers-100-orange)](.)
 
-A robust multi-agent system designed for revenue engineering, market analysis, and monetization strategy formulation using **LangGraph** and advanced Google **Gemini** models.
+A multi-agent system combining specialized worker pools, an intelligent AI agent, and an internal ARV reward economy.
 
-## 🏗️ Architecture & Workflow
+## Live Statistics
 
-The system coordinates specialized AI agents in a sequential graph pipeline:
-1. **Market Analyzer Agent**: Evaluates market viability, demand, and target audience for the proposed project.
-2. **Strategy Formulator Agent**: Builds comprehensive monetization and pricing strategies based on market insights.
-3. **Revenue Optimizer Agent**: Projects revenue streams, identifies risks, and defines optimization milestones.
+| Metric | Value |
+|---|---:|
+| Total Tasks Completed | 0 |
+| Total ARV Distributed | 0 ARV |
+| Active Agents | 0 |
+| Last Database Update | N/A |
 
-## 🚀 Quick Start
+Last README update: 2026-08-17 12:53:15 UTC
 
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/yovlyn/revenue-engineering-agent.git](https://github.com/yovlyn/revenue-engineering-agent.git)
-   cd revenue-engineering-agent
+## Overview
+
+The system is designed to support software development, artificial intelligence, data processing, cybersecurity, infrastructure automation, and observability.
+
+## Core Components
+
+- Orchestrator for task coordination.
+- Specialized worker pools for domain-specific tasks.
+- AI Agent "Micke" for natural-language task handling.
+- ARV reward and transaction tracking.
+- SQLite-based logging and statistics.
+- Automated README generation.
+
+## License
+
+GNU Affero General Public License v3.0 (AGPL-3.0) — see [LICENSE](LICENSE) for details.
+
+## Contact
+
+- GitHub: [@yovlyn](https://github.com/yovlyn)
+- Discord: `yovlyn`
+
+## Roadmap
+
+- Kubernetes deployment.
+- Public API access.
+- Advanced monitoring dashboard.
+- Additional language support.
+
+Last automated update: 2026-08-17 12:53:15 UTC
