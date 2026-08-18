@@ -1,70 +1,36 @@
 import os
 import sys
 import datetime
-from control_plane import check_kill_switch, write_secure_audit_log
+from control_plane import check_kill_switch, write_secure_audit_log, evaluate_task_autonomy
 
-def run_evaluation_engine_with_healing():
-    print("Starting evaluation engine with self-healing capabilities...")
+def run_proactive_evaluation():
+    print("Agent evaluating tasks using autonomy tiers...")
     
-    max_retries = 2
-    attempt = 0
+    # 1. تقييم مهمة روتينية (مخاطر منخفضة) -> سينفذها الوكيل فوراً دون إذن
+    routine_decision = evaluate_task_autonomy("Routine Log Update", risk_level="low")
+    if routine_decision == "EXECUTE_IMMEDIATELY":
+        print("🤖 [Autonomous Action] Executing routine update immediately.")
+        execute_routine_tasks()
     
-    while attempt <= max_retries:
-        try:
-            # تنفيذ مهام التقييم الأساسية وتحديث الملفات
-            execute_core_evaluation()
-            return # خروج ناجح إذا تمت الأمور بدون أخطاء
-            
-        except Exception as e:
-            attempt += 1
-            print(f"⚠️ [Attempt {attempt}] Error encountered: {str(e)}")
-            
-            # محاولة المعالجة الذاتية (Self-Healing)
-            if attempt <= max_retries:
-                print("🔄 Attempting self-healing / system recovery...")
-                heal_system_state()
-                write_secure_audit_log({
-                    "event": "SELF_HEALING_ATTEMPT",
-                    "attempt": attempt,
-                    "error": str(e)
-                })
-            else:
-                # استنفاد المحاولات، يتم تمرير الخطأ للتصعيد النهائي
-                raise e
+    # 2. تقييم مهمة حساسة (مخاطر عالية) -> سيطلب الوكيل موافقة بشرية
+    critical_decision = evaluate_task_autonomy("System Core Modification", risk_level="high")
+    if critical_decision == "REQUIRE_APPROVAL":
+        print("🛡️ [Governance Hold] High-risk task paused. Awaiting human confirmation.")
+        write_secure_audit_log({
+            "event": "TASK_PAUSED_FOR_APPROVAL",
+            "task": "System Core Modification",
+            "status": "WAITING_HUMAN"
+        })
 
-def execute_core_evaluation():
-    # قيم التقييم والمنطق الأساسي
-    score = 45
+def execute_routine_tasks():
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    log_entry = f"[{current_time}] Evaluation Score: {score}/100 (Self-Healing Active)\n"
+    log_entry = f"[{current_time}] Proactive Autonomous Execution successful.\n"
     with open("evaluation_log.txt", "a", encoding="utf-8") as log_file:
         log_file.write(log_entry)
-        
-    update_readme(score, current_time)
-
-def update_readme(score, timestamp):
-    readme_path = "README.md"
-    if not os.path.exists(readme_path):
-        return
-
-    with open(readme_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # تحديث الـ README تلقائياً
-    with open(readme_path, "w", encoding="utf-8") as f:
-        f.write(content)
-
-def heal_system_state():
-    # إجراءات الإصلاح التلقائي في حال فقدان ملف أو حدوث خلل مؤقت
-    if not os.path.exists("evaluation_log.txt"):
-        with open("evaluation_log.txt", "w", encoding="utf-8") as f:
-            f.write("Initialized by Self-Healing recovery system.\n")
 
 def main():
     agent_id = "Micke_Graph_Agent"
     
-    # 1. فحص زر الإيقاف الطارئ
     if check_kill_switch(agent_id):
         write_secure_audit_log({
             "event": "KILL_SWITCH_ACTIVE",
@@ -74,31 +40,24 @@ def main():
         print(f"⛔ [CRITICAL] Kill switch is active for agent '{agent_id}'. Execution halted.")
         sys.exit(0)
     
-    # 2. تسجيل بداية التشغيل
     write_secure_audit_log({
         "event": "AGENT_STARTED",
         "agent_id": agent_id
     })
-    print(f"Agent '{agent_id}' running with self-healing safeguards...")
     
-    # 3. التشغيل مع آلية الإصلاح الذاتي والتصعيد
     try:
-        run_evaluation_engine_with_healing()
-        
+        run_proactive_evaluation()
         write_secure_audit_log({
             "event": "AGENT_COMPLETED",
             "agent_id": agent_id
         })
-        print(f"Agent '{agent_id}' execution finished successfully.")
-        
+        print(f"Agent '{agent_id}' proactive execution finished successfully.")
     except Exception as e:
-        # مرحلة التصعيد النهائي (Escalation) عند فشل الإصلاح الذاتي
         write_secure_audit_log({
             "event": "AGENT_FAILED_AND_ESCALATED",
             "agent_id": agent_id,
             "error": str(e)
         })
-        print(f"🚨 [CRITICAL ESCALATION] Agent failed after self-healing attempts: {str(e)}")
         raise e
 
 if __name__ == "__main__":
