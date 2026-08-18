@@ -1,0 +1,31 @@
+name: Self-Evaluation Workflow
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # يعمل تلقائياً يومياً في منتصف الليل
+  workflow_dispatch: # يتيح لك تشغيله يدوياً في أي وقت من زر Run workflow
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Run Self-Evaluation Script
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: python main.py
+
+      - name: Commit and Push Log
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add evaluation_log.txt
+          git commit -m "Auto: Update self-evaluation log" || echo "No changes to commit"
+          git push
