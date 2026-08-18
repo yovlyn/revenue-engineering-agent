@@ -1,19 +1,24 @@
 from self_healing import self_heal_execution
 from memory_engine import save_to_memory, load_memory
+from api_engine import fetch_market_data
 
 def core_operational_task():
-    """مهمة الوكيل التي تستخدم الذاكرة الآن."""
-    print("Agent accessing long-term memory...")
-    history = load_memory()
+    print("Agent accessing API for live market data...")
+    btc_price = fetch_market_data("BTC")
     
-    # محاكاة تعلم الوكيل من ذكرياته
-    last_run = history.get("last_successful_operation", "None")
-    print(f"Last remembered successful task: {last_run}")
+    # منطق اتخاذ القرار (Level 4 Logic)
+    decision = "HOLD"
+    if isinstance(btc_price, float):
+        if btc_price < 60000:
+            decision = "BUY_SIGNAL"
+        else:
+            decision = "SELL_SIGNAL"
     
-    # تحديث الذاكرة بعد المهمة
-    save_to_memory("last_successful_operation", "Revenue_Engine_Optimization_v4")
+    # حفظ النتائج في الذاكرة طويلة المدى
+    save_to_memory("last_market_decision", decision)
+    save_to_memory("last_btc_price", btc_price)
     
-    return "Operations completed and saved to memory."
+    return f"Decision: {decision}, Price: {btc_price}"
 
 if __name__ == "__main__":
     response = self_heal_execution(core_operational_task)
