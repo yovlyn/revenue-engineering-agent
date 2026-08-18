@@ -1,61 +1,53 @@
-import os
-import json
+import datetime
 import hashlib
-from datetime import datetime
+import json
+import os
 
-# مسارات ملفات التحكم والسجلات (معزولة عن كود الوكيل الرئيسي)
-KILL_SWITCH_FILE = os.getenv("KILL_SWITCH_PATH", "kill_switch.json")
-AUDIT_LOG_FILE = os.getenv("AUDIT_LOG_PATH", "secure_audit_log.jsonl")
+AUDIT_LOG_PATH = "secure_audit_log.jsonl"
 
-def init_control_plane():
-  """تهيئة ملف الإيقاف الطارئ الافتراضي إذا لم يكن موجوداً"""
-  if not os.path.exists(KILL_SWITCH_FILE):
-    default_config = {"global_kill": False, "agent_kills": []}
-    with open(KILL_SWITCH_FILE, "w", encoding="utf-8") as f:
-      json.dump(default_config, f, indent=4)
-
-def check_kill_switch(agent_id: str) -> bool:
-  """التحقق مما إذا كان نظام الإيقاف الطارئ مفعلاً عالمياً أو لهذا الوكيل بالذات"""
-  init_control_plane()
-  try:
-    with open(KILL_SWITCH_FILE, "r", encoding="utf-8") as f:
-      config = json.load(f)
-
-    # التحقق من الإيقاف العام
-    if config.get("global_kill", False):
-      return True
-
-    # التحقق من إيقاف وكيل محدد
-    if agent_id in config.get("agent_kills", []):
-      return True
-
-    return False
-  except Exception:
-    return False  # في حال الخطأ، يُسمح بالعمل افتراضياً أو حسب الحاجة
-
-def write_secure_audit_log(event: dict):
-  """كتابة سجل تدقيق مؤمن يعتمد على تسلسل البصمات (Hash Chain) لمنع التلاعب"""
-  try:
-    last_hash = ""
-    if os.path.exists(AUDIT_LOG_FILE):
-      with open(AUDIT_LOG_FILE, "r", encoding="utf-8") as f:
+def get_latest_hash():
+    if not os.path.exists(AUDIT_LOG_PATH):
+        return ""
+    with open(AUDIT_LOG_PATH, "r", encoding="utf-8") as f:
         lines = f.readlines()
-        if lines:
-          last_entry = json.loads(lines[-1])
-          last_hash = last_entry.get("hash", "")
+        if not lines:
+            return ""
+        last_line = lines[-1].strip()
+        try:
+            data = json.loads(last_line)
+            return data.get("hash", "")
+        except json.JSONDecodeError:
+            return ""
 
-    # إدخال طابع زمني دقيق وبصمة السجل السابق
-    event["timestamp"] = datetime.utcnow().isoformat()
-    event["previous_hash"] = last_hash
+def write_secure_audit_log(event_data):
+    previous_hash = get_latest_hash()
+    event_data["timestamp"] = datetime.datetime.now().isoformat()
+    event_data["previous_hash"] = previous_hash
+    
+    # حساب بصمة الـ Hash لضمان سلامة السجل
+    block_string = json.dumps(event_data, sort_keys=True)
+    new_hash = hashlib.sha256(block_string.encode("utf-8")).hexdigest()
+    event_data["hash"] = new_hash
+    
+    with open(AUDIT_LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(json.dumps(event_data) + "\n")
 
-    # حساب بصمة SHA-256 لهذا الحدث مع السجل السابق
-    event_string = json.dumps(event, sort_keys=True)
-    event_hash = hashlib.sha256(event_string.encode("utf-8")).hexdigest()
-    event["hash"] = event_hash
+def check_kill_switch(agent_id):
+    # فحص زر الإيقاف الطارئ
+    kill_switch_file = "KILL_SWITCH"
+    if os.path.exists(kill_switch_file):
+        return True
+    return False
 
-    # حفظ السجل المؤمني الجديد
-    with open(AUDIT_LOG_FILE, "a", encoding="utf-8") as f:
-      f.write(json.dumps(event, ensure_ascii=False) + "\n")
-
-  except Exception as e:
-    print(f"Audit log error: {e}")
+def evaluate_task_autonomy(task_type, risk_level):
+    """
+    نظام تقييم الاستقلالية: يحدد ما إذا كان الوكيل سينجز المهمة فوراً 
+    أو سيقف لطلب موافقة بشرية بناءً على مستوى المخاطر (risk_level).
+    """
+    if risk_level == "low":
+        print(f"🤖 [Proactive Agent] Task '{task_type}' classified as Low Risk. Executing autonomously.")
+        return "EXECUTE_IMMEDIATELY"
+    else:
+        print(f"🛡️ [Governance] Task '{task_type}' classified as High Risk. Pausing for human approval.")
+        return "REQUIRE_APPROVAL"
+      
