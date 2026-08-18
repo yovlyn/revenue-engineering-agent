@@ -1,4 +1,4 @@
-name: Self-Evaluation Workflow
+Name: Self-Evaluation Workflow
 
 on:
   workflow_dispatch:
@@ -31,3 +31,4 @@ jobs:
         with:
           commit_message: "Auto-update system logs and dynamic README via Temporal Guard"
           branch: main
+          push_options: '--force'
