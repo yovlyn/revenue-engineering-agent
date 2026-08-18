@@ -3,6 +3,9 @@ name: Self-Evaluation Workflow
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   evaluate:
     runs-on: ubuntu-latest
