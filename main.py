@@ -2,7 +2,6 @@ import os
 import datetime
 import traceback
 from google import genai
-from google.genai import types
 
 def professional_agent_workflow():
     """
@@ -17,7 +16,7 @@ def professional_agent_workflow():
     # 1. التحقق من توفر المفتاح الأمني للنموذج
     api_key = os.environ.get("LLM_API_KEY")
     if not api_key:
-        print("Error: LLM_API_KEY is missing from environment variables.")
+        print(f"[{timestamp}] Error: LLM_API_KEY is missing from environment variables.")
         return
 
     print(f"[{timestamp}] Starting Professional Agent Evaluation Cycle...")
@@ -34,6 +33,7 @@ def professional_agent_workflow():
             previous_logs = f"Error reading logs: {str(e)}"
 
     # 3. إعداد الاتصال بنموذج الذكاء الاصطناعي الاحترافي
+    ai_suggestion = "No AI analysis performed."
     try:
         client = genai.Client(api_key=api_key)
         
@@ -49,9 +49,9 @@ def professional_agent_workflow():
         Task: Give one precise Python snippet or architectural optimization to improve agent reliability.
         """
 
-        # استدعاء النموذج الأحدث والأكثر كفاءة
+        # استدعاء أحدث نموذج مدعوم
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.6-flash',
             contents=prompt,
         )
         ai_suggestion = response.text.strip()
