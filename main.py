@@ -1,15 +1,20 @@
 from self_healing import self_heal_execution
+from memory_engine import save_to_memory, load_memory
 
 def core_operational_task():
-    """الدالة الأساسية المسؤولة عن مهام المحرك والتشغيل."""
-    print("Executing core engine revenue and optimization tasks...")
-    # يمكنك إضافة مهامك التشغيلية الحقيقية هنا
-    return "Operations completed nominally and securely."
+    """مهمة الوكيل التي تستخدم الذاكرة الآن."""
+    print("Agent accessing long-term memory...")
+    history = load_memory()
+    
+    # محاكاة تعلم الوكيل من ذكرياته
+    last_run = history.get("last_successful_operation", "None")
+    print(f"Last remembered successful task: {last_run}")
+    
+    # تحديث الذاكرة بعد المهمة
+    save_to_memory("last_successful_operation", "Revenue_Engine_Optimization_v4")
+    
+    return "Operations completed and saved to memory."
 
 if __name__ == "__main__":
-    print("Starting Autonomous Agent with Level 4 Self-Correction Loop...")
-    
-    # تنفيذ المهمة تحت مراقبة وحماية نظام التصحيح الذاتي
     response = self_heal_execution(core_operational_task)
-    
-    print(f"Execution Status Report: {response}")
+    print("Status:", response)
