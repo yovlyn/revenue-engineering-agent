@@ -1,5 +1,5 @@
 {
     "last_successful_operation": "Revenue_Engine_Optimization_v4",
     "last_market_decision": "HOLD",
-    "last_btc_price": "API_Error_Format: {'code': 0, 'msg': \"Service unavailable from a restricted location according to 'b. Eligibility' in https://www.binance.com/en/terms. Please contact customer service if you believe you received this message in error.\"}"
+    "last_btc_price": "API_Error: HTTPSConnectionPool(host='api.coincap.io', port=443): Max retries exceeded with url: /v2/assets/btc (Caused by NameResolutionError(\"HTTPSConnection(host='api.coincap.io', port=443): Failed to resolve 'api.coincap.io' ([Errno -2] Name or service not known)\"))"
 }
