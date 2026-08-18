@@ -1,23 +1,39 @@
 import requests
 
-def fetch_market_data(symbol="bitcoin"):
+def fetch_market_data(symbol="BTC"):
     """
-    جلب بيانات حية من CoinCap API كبديل آمن لا يتأثر بالحظر الجغرافي.
+    جلب بيانات حية مع عدة مصادر بديلة لتجنب مشاكل الشبكة والـ DNS.
     """
+    # المحاولة الأولى: استخدام Binance API المباشر
     try:
-        # استخدام معرف العملة بالاسم الصريح مثل bitcoin
-        url = f"https://api.coincap.io/v2/assets/{symbol.lower()}"
-        response = requests.get(url, timeout=10)
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}USDT"
+        response = requests.get(url, timeout=5)
         data = response.json()
-        
-        # استخراج السعر من هيكل الاستجابة الخاص بـ CoinCap
+        if isinstance(data, dict) and "price" in data:
+            return float(data['price'])
+    except Exception:
+        pass
+
+    # المحاولة الثانية: استخدام CoinCap API كبديل أول
+    try:
+        url = "https://api.coincap.io/v2/assets/bitcoin"
+        response = requests.get(url, timeout=5)
+        data = response.json()
         if "data" in data and "priceUsd" in data["data"]:
             return float(data["data"]["priceUsd"])
-        else:
-            return f"API_Error_Format: {str(data)}"
+    except Exception:
+        pass
+
+    # المحاولة الثالثة: استخدام بديل ثالث خفيف (CoinGecko)
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        if "bitcoin" in data and "usd" in data["bitcoin"]:
+            return float(data["bitcoin"]["usd"])
     except Exception as e:
-        return f"API_Error: {str(e)}"
+        return f"API_Error: All fallback APIs failed ({str(e)})"
 
 if __name__ == "__main__":
-    price = fetch_market_data("bitcoin")
+    price = fetch_market_data("BTC")
     print(f"Current Price: {price}")
