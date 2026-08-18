@@ -44,3 +44,58 @@ google.genai.errors.ClientError: 404 NOT_FOUND. {'error': {'code': 404, 'message
 
 ========================================
 
+
+========================================
+[CYCLE TIMESTAMP]: 2026-08-18 16:34:34
+[AGENT STATUS]: Operational & Autonomous
+[AI RECOMMENDATION]:
+### Root Cause Analysis
+The system failed due to an unhandled `google.genai.errors.ClientError` (HTTP 404) triggered by a deprecated model identifier (`gemini-2.5-flash`). Hardcoding model strings without dynamic fallback or configuration decoupling leads to hard failures when providers sunset specific endpoints or aliases.
+
+---
+
+### Actionable Recommendation: Dynamic Model Resolver with Fallback Circuit
+
+Implement an environment-configurable model resolver that validates model availability and falls back to supported default endpoints (`gemini-3.6-flash`), preventing execution halts during API provider deprecation cycles.
+
+```python
+import os
+import logging
+from typing import Optional
+from google.genai import errors
+
+logger = logging.getLogger(__name__)
+
+# Primary default updated to active API standard; configurable via environment
+PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+FALLBACK_MODEL = "gemini-3.6-flash"
+
+def execute_genai_call(client, prompt: str, model_name: Optional[str] = None):
+    """
+    Executes a Google GenAI API request with automatic deprecation/404 fallback handling.
+    """
+    target_model = model_name or PRIMARY_MODEL
+    try:
+        return client.models.generate_content(
+            model=target_model,
+            contents=prompt
+        )
+    except errors.ClientError as e:
+        # Catch 404 (Resource Exhausted / Deprecated Endpoint) or 400 invalid model errors
+        if e.code in (404, 400) and target_model != FALLBACK_MODEL:
+            logger.warning(
+                f"Model '{target_model}' unavailable (Code {e.code}). "
+                f"Failing over to fallback model '{FALLBACK_MODEL}'."
+            )
+            return client.models.generate_content(
+                model=FALLBACK_MODEL,
+                contents=prompt
+            )
+        raise e
+```
+
+### Architectural Enhancements
+1. **Environment Decoupling**: Set `GEMINI_MODEL=gemini-3.6-flash` across deployment manifests (Helm/Docker Compose/CI-CD secrets) rather than hardcoding in application source code.
+2. **Tenacity Retry Exception Filtering**: Ensure `tenacity` retry policy ignores `ClientError` HTTP 404 status codes (non-transient errors) to prevent wasting retry budgets on deprecated model calls.
+========================================
+
