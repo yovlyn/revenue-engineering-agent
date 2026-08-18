@@ -1,4 +1,4 @@
-Name: Self-Evaluation Workflow
+name: Self-Evaluation Workflow
 
 on:
   workflow_dispatch:
@@ -26,9 +26,14 @@ jobs:
       - name: Run README Updater
         run: python update_readme.py
 
+      - name: Pull latest changes before commit
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase || echo "No rebase needed"
+
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Auto-update system logs and dynamic README via Temporal Guard"
           branch: main
-          push_options: '--force'
