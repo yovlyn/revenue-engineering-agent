@@ -1,5 +1,5 @@
 {
     "last_successful_operation": "Revenue_Engine_Optimization_v4",
-    "last_market_decision": "HOLD",
-    "last_btc_price": "API_Error: HTTPSConnectionPool(host='api.coincap.io', port=443): Max retries exceeded with url: /v2/assets/btc (Caused by NameResolutionError(\"HTTPSConnection(host='api.coincap.io', port=443): Failed to resolve 'api.coincap.io' ([Errno -2] Name or service not known)\"))"
+    "last_market_decision": "SELL_SIGNAL",
+    "last_btc_price": 64659.0
 }
