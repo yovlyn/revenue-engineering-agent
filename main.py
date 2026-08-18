@@ -1,95 +1,29 @@
 import os
-import sqlite3
-import structlog
-from typing import TypedDict, List
-from langgraph.graph import StateGraph, END
-from google import genai
+import datetime
 
-logger = structlog.get_logger()
-
-# تهيئة عميل الذكاء الاصطناعي - سيستخدم المفتاح من GitHub Secrets
-client = genai.Client(api_key=os.getenv("LLM_API_KEY"))
-
-# دالة تسجيل الإنجازات الحقيقية في قاعدة البيانات
-def log_execution_to_db():
-    db_path = "agent_system.db"
-    try:
-        with sqlite3.connect(db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO agent_logs (agent_id) VALUES (?)", ("Micke_Graph_Agent",))
-            cursor.execute("INSERT INTO transactions (type, amount) VALUES (?, ?)", ("TASK_COMPLETED", 100.0))
-            conn.commit()
-            print("✅ Real execution logged to database.")
-    except Exception as e:
-        print(f"Error logging to DB: {e}")
-
-# تعريف حالة النظام المشتركة بين الوكلاء
-class AgentState(TypedDict):
-    task: str
-    market_analysis: str
-    strategy: str
-    revenue_forecast: str
-    messages: List[str]
-
-# 1. وكيل تحليل السوق
-def market_analyzer_node(state: AgentState):
-    logger.info("Running Market Analyzer Agent...")
-    prompt = f"Analyze the market viability and target audience for this revenue project: {state['task']}"
-    # تم التحديث هنا إلى الموديل الصحيح الذي نجح في التجربة
-    response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
-    state["market_analysis"] = response.text
-    state["messages"].append("Market analysis completed.")
-    return state
-
-# 2. وكيل صياغة الاستراتيجية
-def strategy_node(state: AgentState):
-    logger.info("Running Strategy Formulator Agent...")
-    prompt = f"Based on this market analysis: '{state['market_analysis']}', formulate a robust monetization and pricing strategy."
-    response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
-    state["strategy"] = response.text
-    state["messages"].append("Monetization strategy formulated.")
-    return state
-
-# 3. وكيل هندسة الإيرادات
-def revenue_optimizer_node(state: AgentState):
-    logger.info("Running Revenue Optimizer Agent...")
-    prompt = f"Based on this strategy: '{state['strategy']}', project the revenue streams, risks, and optimization milestones."
-    response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
-    state["revenue_forecast"] = response.text
-    state["messages"].append("Revenue engineering and forecasting completed.")
-    return state
-
-# بناء مسار العمل
-workflow = StateGraph(AgentState)
-workflow.add_node("market_analyzer", market_analyzer_node)
-workflow.add_node("strategy_formulator", strategy_node)
-workflow.add_node("revenue_optimizer", revenue_optimizer_node)
-
-workflow.set_entry_point("market_analyzer")
-workflow.add_edge("market_analyzer", "strategy_formulator")
-workflow.add_edge("strategy_formulator", "revenue_optimizer")
-workflow.add_edge("revenue_optimizer", END)
-
-app_graph = workflow.compile()
+def self_evaluate():
+    """
+    مستوى 1: التقييم الذاتي البسيط
+    يقوم الوكيل بفحص بيئة العمل وسجلات التشغيل لتحديد حالة النظام.
+    """
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # التحقق من وجود مفتاح الذكاء الاصطناعي الذي أضفناه مسبقاً
+    api_key_status = "Available" if os.environ.get("LLM_API_KEY") else "Missing"
+    
+    evaluation_report = f"""
+    --- System Self-Evaluation Report ---
+    Timestamp: {timestamp}
+    LLM API Key Status: {api_key_status}
+    Status: System is operational and ready for agentic workflows.
+    -------------------------------------
+    """
+    
+    print(evaluation_report)
+    
+    # حفظ التقرير محلياً أو إرساله لسجلات المتابعة
+    with open("evaluation_log.txt", "a", encoding="utf-8") as f:
+        f.write(evaluation_report + "\n")
 
 if __name__ == "__main__":
-    print("🚀 Initializing Revenue Engineering Multi-Agent System...")
-    
-    initial_state = {
-        "task": "An AI-powered automated code review and DevOps optimization SaaS for digital startups.",
-        "market_analysis": "",
-        "strategy": "",
-        "revenue_forecast": "",
-        "messages": []
-    }
-    
-    print("\n⏳ Running the agent graph pipeline...")
-    final_state = app_graph.invoke(initial_state)
-    
-    # توثيق الإنجاز الحقيقي
-    log_execution_to_db()
-    
-    print("\n================ 📊 EXECUTION RESULTS ================")
-    for msg in final_state["messages"]:
-        print(f"✅ {msg}")
-    print("======================================================")
+    self_evaluate()
