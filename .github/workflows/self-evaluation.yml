@@ -6,8 +6,6 @@ on:
 jobs:
   evaluate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -18,14 +16,18 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run Main System
         run: python main.py
 
+      - name: Run README Updater
+        run: python update_readme.py
+
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Auto-update: Logs and Secure Audit Trail"
-          # هنا أضفنا secure_audit_log.jsonl ليقوم البوت برفعه دائماً
-          file_pattern: evaluation_log.txt README.md secure_audit_log.jsonl
+          commit_message: "Auto-update system logs and dynamic README via Temporal Guard"
+          branch: main
