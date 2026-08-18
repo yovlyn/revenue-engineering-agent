@@ -1,25 +1,23 @@
 import requests
 
-def fetch_market_data(symbol="BTC"):
+def fetch_market_data(symbol="bitcoin"):
     """
-    جلب بيانات حية من API عام مع معالجة محسنة للاستجابة.
+    جلب بيانات حية من CoinCap API كبديل آمن لا يتأثر بالحظر الجغرافي.
     """
     try:
-        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}USDT"
+        # استخدام معرف العملة بالاسم الصريح مثل bitcoin
+        url = f"https://api.coincap.io/v2/assets/{symbol.lower()}"
         response = requests.get(url, timeout=10)
         data = response.json()
         
-        # التأكد من وجود مفتاح السعر في الرد
-        if isinstance(data, dict) and "price" in data:
-            return float(data['price'])
-        elif isinstance(data, dict) and "symbol" in data:
-            # طريقة بديلة في حال اختلاف الرد
-            return data
+        # استخراج السعر من هيكل الاستجابة الخاص بـ CoinCap
+        if "data" in data and "priceUsd" in data["data"]:
+            return float(data["data"]["priceUsd"])
         else:
             return f"API_Error_Format: {str(data)}"
     except Exception as e:
         return f"API_Error: {str(e)}"
 
 if __name__ == "__main__":
-    price = fetch_market_data("BTC")
+    price = fetch_market_data("bitcoin")
     print(f"Current Price: {price}")
