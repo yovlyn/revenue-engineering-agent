@@ -1,17 +1,16 @@
 name: Update README & Philosophy
 
 on:
-  schedule:
-    - cron: "0 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *' # يتم تشغيله تلقائياً كل 6 ساعات أو يدوياً
 
 permissions:
-  contents: write
+  contents: write # صلاحية كتابة الـ Git لرفع التغييرات للمستودع
 
 jobs:
-  update-readme:
+  update-dashboard:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,23 +18,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install google-generativeai
-
-      - name: Run Philosophy Agent
-        env:
-          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-        run: python philosophy_agent.py
-
-      - name: Run README updater
-        run: python update_readme.py
-
-      - name: Commit README changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git diff --cached --quiet || git commit -m "✨ Add AI Philosophical Market Insight [skip ci]"
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run main autonomous script
+        run: |
+          python main.py
+
+      - name: Commit and push changes to README and logs
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md trading_history.json memory_bank.json 2>/dev/null || true
+          git commit -m "chore: auto-update live telemetry and trading history [skip ci]" || echo "No changes to commit"
           git push
