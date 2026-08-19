@@ -44,3 +44,4 @@ def self_optimize_strategy():
         json.dump(config, f, indent=4)
         
     return config
+import philosophy_agent
