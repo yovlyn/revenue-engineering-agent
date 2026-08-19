@@ -11,6 +11,7 @@ def execute_paper_trade(signal, current_price):
         try:
             with open(history_file, "r") as f:
                 content = json.load(f)
+                # معالجة آمنة تماماً سواء كان الملف قاّئمة أو قاموساً
                 if isinstance(content, list):
                     trades = content
                     if trades and isinstance(trades[-1], dict):
@@ -56,4 +57,3 @@ def signal_to_pnl(signal):
         return random.uniform(-80.0, 150.0)
     else:
         return random.uniform(-30.0, 50.0)
-        
