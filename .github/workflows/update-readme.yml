@@ -1,9 +1,9 @@
-name: Update README
+name: Update README & Philosophy
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: "0 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,16 +21,21 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Initialize Database
-        run: python scripts/init_database.py
+      - name: Install dependencies
+        run: pip install google-generativeai
+
+      - name: Run Philosophy Agent
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: python philosophy_agent.py
 
       - name: Run README updater
-        run: python scripts/update_readme.py
+        run: python update_readme.py
 
       - name: Commit README changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git diff --cached --quiet || git commit -m "chore: update README statistics"
+          git diff --cached --quiet || git commit -m "✨ Add AI Philosophical Market Insight [skip ci]"
           git push
