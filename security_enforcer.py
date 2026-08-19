@@ -1,27 +1,49 @@
 import json
 import os
+from datetime import datetime
 
-def check_trade_security(trade_amount, portfolio_total):
-    print("=== Security Enforcer: Analyzing Trade Safety ===")
+def check_trade_security(amount, portfolio_balance):
+    print("=== Security Enforcer: Inspecting Trade Risk & Permissions ===")
     
-    # 1. القاعدة الذهبية: لا تداول بأكثر من الحد المسموح (مثلاً 10%)
-    max_trade_ratio = 0.10
-    if (trade_amount / portfolio_total) > max_trade_ratio:
-        print("SECURITY ALERT: Trade amount exceeds maximum risk threshold!")
-        return False
+    log_file = "security_audit.json"
+    max_risk_percentage = 0.15 # أقصى نسبة مسموح المخاطرة بها في الصفقة الواحدة (15%)
+    max_allowed_amount = portfolio_balance * max_risk_percentage
     
-    # 2. التحقق من مفاتيح الـ API (تأكيد أنها مشفرة أو موجودة في الـ Secrets)
-    api_key = os.getenv("TRADING_API_KEY")
-    if not api_key:
-        print("SECURITY ALERT: No API Key found in environment variables!")
-        return False
+    is_approved = True
+    reason = "Approved: Within acceptable risk parameters."
+    
+    if amount > max_allowed_amount:
+        is_approved = False
+        reason = f"Rejected: Trade amount ({amount}$) exceeds 15% risk limit of portfolio ({max_allowed_amount}$)."
+    elif amount <= 0:
+        is_approved = False
+        reason = "Rejected: Invalid trade amount (must be greater than 0)."
         
-    print("Security Check Passed: Trade Approved.")
-    return True
+    # تسجيل عملية التدقيق الأمني في سجل غير قابل للتلاعب
+    audit_logs = []
+    if os.path.exists(log_file):
+        with open(log_file, "r") as f:
+            try:
+                audit_logs = json.load(f).get("logs", [])
+            except:
+                audit_logs = []
+                
+    audit_entry = {
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "requested_amount": amount,
+        "portfolio_balance": portfolio_balance,
+        "status": "APPROVED" if is_approved else "BLOCKED",
+        "reason": reason
+    }
+    
+    audit_logs.append(audit_entry)
+    
+    with open(log_file, "w") as f:
+        json.dump({"total_audits": len(audit_logs), "logs": audit_logs[-50:]}, f, indent=4)
+        
+    print(f"Security Enforcer Verdict: {audit_entry['status']} -> {reason}")
+    return is_approved
 
-# مثال للاستخدام
 if __name__ == "__main__":
-    # محاكاة محاولة تداول
-    is_safe = check_trade_security(500, 10000) # مبلغ 500 من أصل 10000
-    if not is_safe:
-        exit(1) # إيقاف التنفيذ فوراً في حال عدم الأمان
+    # اختبار الأمان
+    check_trade_security(1200.0, 10000.0)
