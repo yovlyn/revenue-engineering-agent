@@ -1,6 +1,6 @@
 {
-    "balance": 9979.16,
-    "total_trades": 1,
+    "balance": 10104.38,
+    "total_trades": 2,
     "trades": [
         {
             "timestamp": "2026-08-19 12:59:53",
@@ -8,6 +8,13 @@
             "signal": "DYNAMIC_EQUILIBRIUM",
             "net_pnl": -20.84,
             "new_balance": 9979.16
+        },
+        {
+            "timestamp": "2026-08-19 13:11:32",
+            "entry_price": 63756.3,
+            "signal": "BULLISH_SIGNAL",
+            "net_pnl": 125.22,
+            "new_balance": 10104.38
         }
     ]
 }
