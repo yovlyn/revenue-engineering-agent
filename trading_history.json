@@ -3,5 +3,10 @@
         "price": 64339.0,
         "decision": "SELL_SIGNAL",
         "timestamp": "2026-08-19 10:20:15"
+    },
+    {
+        "price": 64344.0,
+        "decision": "SELL_SIGNAL",
+        "timestamp": "2026-08-19 10:24:00"
     }
 ]
