@@ -19,5 +19,11 @@
         "decision": "BULLISH_SIGNAL",
         "adaptation": "DYNAMIC_EQUILIBRIUM",
         "timestamp": "2026-08-19 10:36:50"
+    },
+    {
+        "price": 64358.0,
+        "decision": "BULLISH_SIGNAL",
+        "adaptation": "DYNAMIC_EQUILIBRIUM",
+        "timestamp": "2026-08-19 10:39:58"
     }
 ]
