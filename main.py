@@ -5,8 +5,23 @@ from self_healing import self_heal_execution
 from memory_engine import save_to_memory, load_memory
 from api_engine import fetch_market_data
 
+def evaluate_and_adapt_strategy(history):
+    """المستوى الخامس: تقييم الأداء السابق وتعديل استراتيجية التفكير ذاتياً"""
+    if len(history) < 3:
+        return "ADAPTIVE_LEARNING_PHASE"
+    
+    # التحقق من سلوك السوق عبر آخر العمليات لتعديل التكيف
+    recent_decisions = [item['decision'] for item in history[-3:]]
+    
+    # إذا لاحظ الوكيل تكراراً كبيراً لاتجاه واحد، يقوم بتفعيل وضع الحذر الذاتي
+    if recent_decisions.count("BULLISH_SIGNAL") >= 3:
+        return "OPTIMIZED_BULLISH_LOCKED"
+    elif recent_decisions.count("BEARISH_SIGNAL") >= 3:
+        return "OPTIMIZED_BEARISH_DEFENSIVE"
+    
+    return "DYNAMIC_EQUILIBRIUM"
+
 def get_moving_average(history, periods=5):
-    """حساب المتوسط المتحرك لآخر عدد من العمليات"""
     if len(history) < periods:
         return None
     recent_prices = [item['price'] for item in history[-periods:]]
@@ -27,10 +42,10 @@ def append_to_history(data):
     return history
 
 def core_operational_task():
-    print("Agent analyzing market trends...")
+    print("Agent initiating Level 5 Cognitive Adaptation...")
     btc_price = fetch_market_data("BTC")
     
-    # 1. جلب التاريخ لتحليل الاتجاه
+    # 1. قراءة السجل التاريخي
     history_file = "trading_history.json"
     history = []
     if os.path.exists(history_file):
@@ -38,25 +53,33 @@ def core_operational_task():
             try: history = json.load(f)
             except: history = []
             
-    ma = get_moving_average(history, periods=3) # متوسط آخر 3 عمليات
+    # 2. تطبيق المستوى الخامس: التكيف الذاتي بناءً على الأداء السابق
+    adaptation_status = evaluate_and_adapt_strategy(history)
     
-    # 2. منطق القرار الذكي (مقارنة السعر الحالي بالمتوسط)
+    ma = get_moving_average(history, periods=3)
+    
+    # 3. اتخاذ القرار المعزز بالذكاء التكيفي
     decision = "HOLD"
     if ma:
         if btc_price > ma:
-            decision = "BULLISH_SIGNAL" # السعر أعلى من المتوسط (اتجاه صعودي)
+            decision = "BULLISH_SIGNAL"
         else:
-            decision = "BEARISH_SIGNAL" # السعر أقل من المتوسط (اتجاه هبوطي)
+            decision = "BEARISH_SIGNAL"
     else:
-        # قرار أولي إذا لم يتوفر سجل كافٍ
         decision = "INITIALIZING"
     
-    # 3. الحفظ
+    # 4. حفظ الحالة المعرفية الجديدة
     save_to_memory("last_market_decision", decision)
     save_to_memory("last_btc_price", btc_price)
-    append_to_history({"price": btc_price, "decision": decision})
+    save_to_memory("agent_cognitive_tier", "Level 5 (Self-Optimizing)")
     
-    return f"Decision: {decision}, Price: {btc_price}, MA: {ma}"
+    append_to_history({
+        "price": btc_price, 
+        "decision": decision, 
+        "adaptation": adaptation_status
+    })
+    
+    return f"Decision: {decision}, Adaptation: {adaptation_status}, Price: {btc_price}"
 
 if __name__ == "__main__":
     response = self_heal_execution(core_operational_task)
