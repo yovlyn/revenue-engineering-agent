@@ -13,5 +13,11 @@
         "price": 64324.0,
         "decision": "INITIALIZING",
         "timestamp": "2026-08-19 10:29:12"
+    },
+    {
+        "price": 64352.0,
+        "decision": "BULLISH_SIGNAL",
+        "adaptation": "DYNAMIC_EQUILIBRIUM",
+        "timestamp": "2026-08-19 10:36:50"
     }
 ]
