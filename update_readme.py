@@ -2,53 +2,49 @@ import os
 import json
 from datetime import datetime
 
-def generate_advanced_analytics():
-    """يقوم بتحليل أعمق لملفات السجلات والتشغيل لتوليد تقارير أداء حية."""
-    audit_log_path = "secure_audit_log.json"
-    total_ops = 1
-    shield_status = "Nominal & Secure"
-    
-    if os.path.exists(audit_log_path):
+def load_memory():
+    """قراءة البيانات الحية من الذاكرة المشتركة"""
+    memory_path = "memory_bank.json"
+    if os.path.exists(memory_path):
         try:
-            with open(audit_log_path, "r") as f:
-                logs = json.load(f)
-                if isinstance(logs, list):
-                    total_ops = len(logs)
+            with open(memory_path, "r", encoding="utf-8") as f:
+                return json.load(f)
         except Exception:
             pass
-
-    return {
-        "total_operations": total_ops,
-        "shield_integrity": shield_status,
-        "agent_intelligence_level": "Level 3+ (Autonomous Guard)",
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    }
+    return {}
 
 def update_readme_with_reports():
-    metrics = generate_advanced_analytics()
+    # تحميل أحدث البيانات من الذاكرة الحية
+    memory = load_memory()
+    last_btc_price = memory.get("last_btc_price", "N/A")
+    last_market_decision = memory.get("last_market_decision", "N/A")
+    last_operation = memory.get("last_successful_operation", "Revenue_Engine_Optimization")
     
-    readme_content = f"""# Revenue Engine - God-Tier Autonomous System
+    current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-🚀 **System Status & Extended Analytics**
+    # قالب الـ README المحدث ليقرا البيانات الحية من الذاكرة
+    readme_content = f"""# Revenue Engine - Autonomous AI Agent
+
+🚀 **Live Market Telemetry & System Status**
 
 * **Current Status:** Operational & Shielded
-* **Last Security Audit:** {metrics['timestamp']} UTC
-* **Temporal Guard Status:** Active (Shadow Mode)
-* **Total Supervised Operations:** {metrics['total_operations']}
-* **Shield Integrity:** {metrics['shield_integrity']}
-* **Agent Intelligence Tier:** {metrics['agent_intelligence_level']}
+* **Last Updated:** {current_time} UTC
+* **Last Successful Operation:** {last_operation}
+* **Live Bitcoin Price:** `${last_btc_price}`
+* **Market Decision / Signal:** `{last_market_decision}`
+* **Agent Intelligence Tier:** Level 4 (Autonomous Live Execution)
 
 ---
 ### 📊 Extended Telemetry & Reports
-* **Hash-Chaining:** Verified & Immutable
-* **Autonomous Agent Extension:** Active for deep telemetry & repo self-supervision.
+* **Memory Sync:** Active (`memory_bank.json`)
+* **Data Source:** Multi-API Fallback Engine
 
-*Autonomous agent powered by Python, Temporal Guard, and Hash-Chaining.*
+*Autonomous agent powered by Python, GitHub Actions, and Live Memory Banks.*
 """
 
     with open("README.md", "w", encoding="utf-8") as f:
         f.write(readme_content)
-    print("Successfully updated README with extended agent analytics and reports.")
+    print("Successfully updated README with live memory data and market prices.")
 
 if __name__ == "__main__":
     update_readme_with_reports()
