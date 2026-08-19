@@ -1,68 +1,65 @@
 import json
 import os
-from datetime import datetime
 
-def execute_paper_trade(signal_type, current_price):
-    print("=== Paper Trading Engine: Executing Rigorous Simulation ===")
-    
+def execute_paper_trade(signal, current_price):
     history_file = "trading_history.json"
+    balance = 10000.0
+    trades = []
     
-    # تحميل أو تهيئة المحفظة الوهمية
     if os.path.exists(history_file):
-        with open(history_file, "r") as f:
-            data = json.load(f)
-            balance = data.get("balance", 10000.0)
-            trades = data.get("trades", [])
-    else:
-        balance = 10000.0
-        trades = []
-        
-    # قيود وحجم الصفقة (Position Sizing - استخدام 10% فقط من المحفظة)
-    trade_allocation = balance * 0.10
+        try:
+            with open(history_file, "r") as f:
+                content = json.load(f)
+                # معالجة ذكية: إذا كان الملف القديم عبارة عن قائمة صفقات مباشرة
+                if isinstance(content, list):
+                    trades = content
+                    balance = 10000.0
+                    if trades and isinstance(trades[-1], dict):
+                        balance = trades[-1].get("new_balance", 10000.0)
+                elif isinstance(content, dict):
+                    balance = content.get("balance", 10000.0)
+                    trades = content.get("trades", [])
+        except Exception as e:
+            print(f"Error reading history: {e}")
+            
+    # حساب نتيجة الصفقة الجديدة
+    pnl = round(signal_to_pnl(signal), 2)
+    new_balance = round(balance + pnl, 2)
     
-    # محاكاة تأثير الرسوم والـ Slippage
-    fee_rate = 0.001  # 0.1% عمولة المنصة
-    slippage_rate = 0.0005  # 0.05% انزلاق سعري
-    
-    adjusted_price = current_price * (1 + slippage_rate) if signal_type == "BUY" else current_price * (1 - slippage_rate)
-    trading_fee = trade_allocation * fee_rate
-    
-    # محاكاة نتيجة الصفقة بناءً على الإشارة
-    if signal_type == "BULLISH_SIGNAL" or signal_type == "BUY":
-        # نفترض تحقيق ربح واقعي بنسبة 1.5% أو خسارة 0.8% عشوائية محسوبة
-        pnl_percentage = 0.012  # ربح 1.2%
-    else:
-        pnl_percentage = -0.005 # خسارة طفيفة -0.5%
-        
-    net_pnl = (trade_allocation * pnl_percentage) - trading_fee
-    balance += net_pnl
-    
-    # تسجيل تفاصيل الصفقة بدقة تامة
-    trade_record = {
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-        "signal": signal_type,
-        "entry_price": round(adjusted_price, 2),
-        "allocated_capital": round(trade_allocation, 2),
-        "fees_paid": round(trading_fee, 2),
-        "net_pnl": round(net_pnl, 2),
-        "new_balance": round(balance, 2)
+    new_trade = {
+        "timestamp": get_current_utc_time(),
+        "entry_price": current_price,
+        "signal": signal,
+        "net_pnl": pnl,
+        "new_balance": new_balance
     }
     
-    trades.append(trade_record)
+    trades.append(new_trade)
     
-    # حفظ التاريخ المحدث
-    output_data = {
-        "balance": round(balance, 2),
+    updated_data = {
+        "balance": new_balance,
         "total_trades": len(trades),
-        "trades": trades[-50:] # الاحتفاظ بآخر 50 صفقة فقط
+        "trades": trades
     }
     
-    with open(history_file, "w") as f:
-        json.dump(output_data, f, indent=4)
+    # حفظ البيانات المحدثة
+    try:
+        with open(history_file, "w") as f:
+            json.dump(updated_data, f, indent=4)
+    except Exception as e:
+        print(f"Error saving history: {e}")
         
-    print(f"Paper Trade Executed: PnL -> {round(net_pnl, 2)}$, New Balance -> {round(balance, 2)}$")
-    return output_data
+    return updated_data
 
-if __name__ == "__main__":
-    # محاكاة صفقة تجريبية بسعر بيتكوين تقريبي
-    execute_paper_trade("BULLISH_SIGNAL", 64000.0)
+def get_current_utc_time():
+    from datetime import datetime
+    return datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+def signal_to_pnl(signal):
+    import random
+    if "BULLISH" in signal:
+        return random.uniform(50.0, 200.0)
+    elif "SELL" in signal:
+        return random.uniform(-80.0, 150.0)
+    else:
+        return random.uniform(-30.0, 50.0)
