@@ -91,7 +91,7 @@ def main():
     # 3. تشغيل حلقة التعلم
     feedback_data = run_real_feedback_loop()
     
-    # 4. محاكاة التداول وتوليد صفقة جديدة في كل تشغيل
+    # 4. محاكاة التداول وتوليد صفقة جديدة في كل تشغيل (معالجة آمنة لملف السجل)
     history_file = "trading_history.json"
     balance = 10000.0
     trades = []
@@ -99,11 +99,16 @@ def main():
     if os.path.exists(history_file):
         try:
             with open(history_file, "r") as f:
-                data = json.load(f)
-                balance = data.get("balance", 10000.0)
-                trades = data.get("trades", [])
-        except:
-            pass
+                content = json.load(f)
+                if isinstance(content, list):
+                    trades = content
+                    if trades and isinstance(trades[-1], dict):
+                        balance = trades[-1].get("new_balance", 10000.0)
+                elif isinstance(content, dict):
+                    balance = content.get("balance", 10000.0)
+                    trades = content.get("trades", [])
+        except Exception as e:
+            print(f"Error reading history in main: {e}")
             
     # تنفيذ صفقة جديدة بربح أو خسارة عشوائية واقعية لتغيير الأرقام
     current_price = round(64000.0 + random.uniform(-300.0, 400.0), 2)
