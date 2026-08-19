@@ -1,47 +1,28 @@
-import os
-import json
+# main.py - المايسترو الخاص بالنظام
+from monitor_guard import monitor_system
+from security_enforcer import check_trade_security
+from backtest_engine import run_backtest # (نفترض وجود دالة كهذه)
+from paper_trading import run_paper_trading
+from feedback_loop import run_feedback_loop
 
-def self_optimize_strategy():
-    config_path = "config.json"
-    history_path = "trading_history.json"
+def main():
+    print("--- Starting Full Autonomous Cycle ---")
     
-    # تحميل الإعدادات الحالية
-    config = {"moving_average_window": 20, "strategy_mode": "STANDARD", "risk_tolerance": "MEDIUM"}
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                config = json.load(f)
-        except:
-            pass
+    # 1. الحماية أولاً
+    monitor_system()
+    
+    # 2. الاختبار والتحليل
+    # run_backtest()
+    
+    # 3. اتخاذ القرار وتنفيذه (مع فحص الأمان)
+    # إذا كانت المحفظة تسمح والأمان موافق
+    if check_trade_security(amount=500, portfolio=10000):
+        run_paper_trading()
+    
+    # 4. التعلم من النتائج
+    run_feedback_loop()
+    
+    print("--- Cycle Completed Successfully ---")
 
-    # تحميل سجل التداول للمراجعة الخلفية (Backtesting Check)
-    if not os.path.exists(history_path):
-        return config # لا يوجد سجل كافي بعد
-
-    try:
-        with open(history_path, "r", encoding="utf-8") as f:
-            history = json.load(f)
-    except:
-        return config
-
-    if len(history) >= 3:
-        # فحص آخر 3 قرارات أو صفقات لمعرفة ما إذا كانت تتطلب تدخلاً تطورياً
-        recent_decisions = [item.get("decision") for item in history[-3:]]
-        
-        # مثال على التحور الذاتي (Parameter & Strategy Tuning):
-        # إذا لاحظنا تكرار إشارات معينة أو تقلبات، نقوم بتعديل النافذة (Window) تلقائياً
-        if all(d == "SELL_SIGNAL" for d in recent_decisions):
-            config["moving_average_window"] = 50  # التحول لنافذة أوسع وأكثر أماناً
-            config["strategy_mode"] = "DEFENSIVE_MUTATION"
-            print("🧠 [Self-Optimization]: تم اكتشاف نمط هبوط متكرر. قام الوكيل بتعديل المعاملات ذاتياً إلى MA=50 وتفعيل الوضع الدفاعي.")
-        else:
-            config["moving_average_window"] = 20
-            config["strategy_mode"] = "DYNAMIC_EQUILIBRIUM"
-            print("🧠 [Self-Optimization]: النظام مستقر في حالة الاتزان الديناميكي.")
-
-    # حفظ الإعدادات المطورة في ملف config.json
-    with open(config_path, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
-        
-    return config
-import philosophy_agent
+if __name__ == "__main__":
+    main()
