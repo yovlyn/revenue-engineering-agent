@@ -1,6 +1,6 @@
 {
-    "balance": 10460.75,
-    "total_trades": 6,
+    "balance": 10529.12,
+    "total_trades": 7,
     "trades": [
         {
             "timestamp": "2026-08-19 12:59:53",
@@ -43,6 +43,13 @@
             "signal": "SELL_SIGNAL",
             "net_pnl": 51.13,
             "new_balance": 10460.75
+        },
+        {
+            "timestamp": "2026-08-20 06:56:30",
+            "entry_price": 64000.89,
+            "signal": "BULLISH_SIGNAL",
+            "net_pnl": 68.37,
+            "new_balance": 10529.12
         }
     ]
 }
