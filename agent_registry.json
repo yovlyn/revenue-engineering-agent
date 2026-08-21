@@ -1,0 +1,19 @@
+{
+  "system_version": "Level 5 Enterprise",
+  "last_updated": "2026-08-21",
+  "agents": [
+    {
+      "id": "Revenue_Engine_Core_Agent",
+      "owner": "Micke",
+      "role": "Autonomous Market Telemetry & Trading Agent",
+      "risk_tier": "Medium",
+      "permissions": [
+        "read_market_data",
+        "execute_paper_trades",
+        "update_readme_dashboard",
+        "write_audit_logs"
+      ],
+      "status": "Operational & Self-Optimizing"
+    }
+  ]
+}
