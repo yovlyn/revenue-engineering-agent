@@ -1,10 +1,11 @@
-# main.py - Revenue Engine Autonomous Agent (Level 5 Fully Integrated with Audit Trail)
+# main.py - Revenue Engine Autonomous Agent (Level 5 Fully Integrated)
 import json
 import datetime
 from risk_governance import check_risk_guardrails
 from explainer_engine import generate_decision_explanation
 from incident_response import log_incident, trigger_safe_fallback
 from audit_trail import AuditTrail
+from hitl_gate import check_human_approval, request_human_approval
 
 def load_agent_registry():
     try:
@@ -35,7 +36,14 @@ def run_autonomous_cycle():
         current_signal = "BULLISH_SIGNAL"
         metrics = {"Sharpe Ratio": 6.34, "Strategy Return (%)": 22.14}
         
-        # 1. تطبيق حوكمة المخاطر والـ Guardrails
+        # 1. التحقق من بوابة الموافقة البشرية (Human-in-the-Loop - HITL)
+        if not check_human_approval():
+            request_human_approval("EXECUTE_TRADE", {"amount": trade_amount, "asset": "BTC", "price": btc_price})
+            print("[HITL Gate] Execution paused waiting for human approval. Action halted.")
+            audit.log("TRADE_PAUSED_HITL", agent_id, {"reason": "Waiting for human approval", "amount": trade_amount})
+            return
+
+        # 2. تطبيق حوكمة المخاطر والـ Guardrails
         is_safe, risk_msg = check_risk_guardrails(trade_amount, portfolio_balance)
         print(f"[Governance] {risk_msg}")
         
@@ -45,7 +53,7 @@ def run_autonomous_cycle():
             print("Action halted due to risk constraints.")
             return
 
-        # 2. توليد شرح وتفسير للقرار
+        # 3. توليد شرح وتفسير للقرار
         explanation = generate_decision_explanation(
             current_signal, 
             btc_price, 
@@ -56,7 +64,7 @@ def run_autonomous_cycle():
         print(explanation)
         print("------------------------------------\n")
 
-        # 3. تسجيل الحدث في الـ Audit Trail المشفر
+        # 4. تسجيل الحدث في الـ Audit Trail المشفر
         audit_hash = audit.log(
             event_type="TRADE_DECISION_APPROVED",
             agent_id=agent_id,
@@ -69,7 +77,7 @@ def run_autonomous_cycle():
         )
         print(f"[Audit Trail] Event securely anchored with Hash: {audit_hash[:16]}...")
 
-        # 4. محاكاة نجاح العملية
+        # 5. محاكاة نجاح العملية
         print("[Execution] Operation completed successfully under secure parameters.")
         
     except Exception as e:
