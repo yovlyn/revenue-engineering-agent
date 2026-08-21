@@ -1,14 +1,12 @@
-# main.py - Revenue Engine Autonomous Agent (Level 5 Fully Integrated)
+# main.py - Revenue Engine Autonomous Agent (Level 5 Fully Integrated with Audit Trail)
 import json
 import datetime
 from risk_governance import check_risk_guardrails
 from explainer_engine import generate_decision_explanation
 from incident_response import log_incident, trigger_safe_fallback
+from audit_trail import AuditTrail
 
 def load_agent_registry():
-    """
-    يقوم بقراءة السجل المركزي للوكلاء للتأكد من الهوية، الدور، ومستوى المخاطر.
-    """
     try:
         with open("agent_registry.json", "r") as f:
             registry = json.load(f)
@@ -20,13 +18,17 @@ def load_agent_registry():
         return {}
 
 def run_autonomous_cycle():
-    print("=== Starting Autonomous Execution Cycle ===")
+    print("=== Starting Autonomous Execution Cycle (Level 5) ===")
+    
+    # تهيئة نظام التدقيق المشفر
+    audit = AuditTrail()
     
     try:
         # 0. التحقق من الهوية والصلاحيات عبر السجل المركزي
         agent = load_agent_registry()
+        agent_id = agent.get('id', 'Unknown_Agent')
         
-        # بيانات الدورة الحية أو الافتراضية
+        # بيانات الدورة
         btc_price = 64000.0
         trade_amount = 500.0
         portfolio_balance = 10260.23
@@ -39,10 +41,11 @@ def run_autonomous_cycle():
         
         if not is_safe:
             log_incident(f"Operation blocked by risk policy: {risk_msg}", severity="Medium")
+            audit.log("TRADE_BLOCKED", agent_id, {"reason": risk_msg, "amount": trade_amount})
             print("Action halted due to risk constraints.")
             return
 
-        # 2. توليد شرح وتفسير للقرار (Explainability) مع أخذ مستوى المخاطر من السجل
+        # 2. توليد شرح وتفسير للقرار
         explanation = generate_decision_explanation(
             current_signal, 
             btc_price, 
@@ -53,11 +56,23 @@ def run_autonomous_cycle():
         print(explanation)
         print("------------------------------------\n")
 
-        # 3. محاكاة نجاح العملية التشغيلية
+        # 3. تسجيل الحدث في الـ Audit Trail المشفر
+        audit_hash = audit.log(
+            event_type="TRADE_DECISION_APPROVED",
+            agent_id=agent_id,
+            details={
+                "signal": current_signal,
+                "btc_price": btc_price,
+                "trade_amount": trade_amount,
+                "metrics": metrics
+            }
+        )
+        print(f"[Audit Trail] Event securely anchored with Hash: {audit_hash[:16]}...")
+
+        # 4. محاكاة نجاح العملية
         print("[Execution] Operation completed successfully under secure parameters.")
         
     except Exception as e:
-        # 4. التعامل مع الطوارئ والأخطاء غير المتوقعة
         error_msg = f"Critical error in main loop: {str(e)}"
         log_incident(error_msg, severity="Critical")
         trigger_safe_fallback()
