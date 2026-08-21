@@ -1,0 +1,13 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment and system files
+.env
+venv/
+env/
+.DS_Store
+
+# Temporary incident or local log overrides if needed (optional)
+# incident_log.txt
