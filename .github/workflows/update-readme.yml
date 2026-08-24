@@ -1,18 +1,18 @@
 name: Update README & Philosophy
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *' # يتم تشغيله تلقائياً كل 6 ساعات أو يدوياً
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 permissions:
-  contents: write # صلاحية كتابة الـ Git لرفع التغييرات للمستودع
+  contents: write
 
 jobs:
   update-dashboard:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -20,19 +20,21 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run main autonomous script
+      - name: Run Main Engine
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python main.py
 
-      - name: Commit and push changes to README and logs
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md trading_history.json memory_bank.json 2>/dev/null || true
-          git commit -m "chore: auto-update live telemetry and trading history [skip ci]" || echo "No changes to commit"
+          git add README.md
+          git commit -m "Auto-update: Revenue Engine & Telemetry [skip ci]" || exit 0
           git push
