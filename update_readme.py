@@ -38,12 +38,12 @@ def call_gemini(prompt, api_key):
         return "Market data flows through cycles of measurement and reflection."
     try:
         from google import genai
-client = genai.Client(api_key=api_key)
-response = client.models.generate_content(
-    model="gemini-3-flash",
-    contents=prompt
-)
-return response.text.strip()
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-3-flash",
+            contents=prompt
+        )
+        return response.text.strip()
     except Exception as e:
         print(f"ERROR calling Gemini: {e}")
         return "Market rhythm continues, though today's reflection could not be generated."
