@@ -37,7 +37,7 @@ def call_gemini(prompt, api_key):
         print("WARNING: GEMINI_API_KEY not set, skipping Gemini call.")
         return "Market data flows through cycles of measurement and reflection."
     try:
-        gfrom google import genai
+        from google import genai
 client = genai.Client(api_key=api_key)
 response = client.models.generate_content(
     model="gemini-3-flash",
