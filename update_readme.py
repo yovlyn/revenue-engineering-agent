@@ -3,7 +3,6 @@ import random
 import datetime
 import sys
 import os
-import google.generativeai as genai
 
 MEMORY_FILE = "memory_bank.json"
 HISTORY_FILE = "trading_history.json"
