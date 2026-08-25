@@ -37,10 +37,13 @@ def call_gemini(prompt, api_key):
         print("WARNING: GEMINI_API_KEY not set, skipping Gemini call.")
         return "Market data flows through cycles of measurement and reflection."
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(prompt)
-        return response.text.strip()
+        gfrom google import genai
+client = genai.Client(api_key=api_key)
+response = client.models.generate_content(
+    model="gemini-3-flash",
+    contents=prompt
+)
+return response.text.strip()
     except Exception as e:
         print(f"ERROR calling Gemini: {e}")
         return "Market rhythm continues, though today's reflection could not be generated."
