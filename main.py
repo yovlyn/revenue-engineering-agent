@@ -7,12 +7,14 @@ from strategy_engine import decide_strategy_signal
 from paper_trading import execute_paper_trade
 from feedback_loop import run_real_feedback_loop
 from backtest_engine import run_real_backtest
+from database import log_event
 
 MEMORY_FILE = "memory_bank.json"
 HISTORY_FILE = "trading_history.json"
 
 def main():
     print("🚀 بدء دورة التشغيل والتفعيل الشاملة لـ Revenue Engine...")
+    log_event("Engine Start", "بدء دورة التشغيل والتفعيل الشاملة", "info")
     
     # 1. جلب السعر الحقيقي للبيتكوين والبيانات التاريخية للاستراتيجية
     current_price = fetch_real_bitcoin_price()
@@ -48,12 +50,14 @@ def main():
     memory["last_market_decision"] = signal
     save_json(MEMORY_FILE, memory)
     
+    log_event("Engine Run", f"تم تحديث المقاييس وقاعدة البيانات بنجاح. السعر الحالي: {current_price}, الإشارة: {signal}", "success")
     print("✅ تمت عملية التفعيل والدورة بنجاح تام!")
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"❌ خطأ فادح أثناء التشغيل: {e}", file=sys.stderr)
+        error_msg = f"❌ خطأ فادح أثناء التشغيل: {e}"
+        print(error_msg, file=sys.stderr)
+        log_event("Engine Error", str(e), "error")
         sys.exit(1)
-        
