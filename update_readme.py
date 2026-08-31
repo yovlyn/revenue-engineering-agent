@@ -21,15 +21,43 @@ def save_json(path, data):
         json.dump(data, f, indent=4)
 
 def fetch_real_bitcoin_price():
-    """البند 1: جلب السعر الحقيقي للبيتكوين من باينانس بدلاً من العشوائية"""
-    url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+    """جلب السعر الحقيقي للبيتكوين مع تفعيل نظام البدائل (Binance -> CoinGecko -> CoinCap) لتجاوز قيود الحظر الجغرافي 451"""
+    
+    # 1. محاولة Binance الأولى
+    binance_url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        req = urllib.request.Request(binance_url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode())
-            return float(data['price'])
+            price = float(data['price'])
+            print(f"✅ تم جلب السعر بنجاح من Binance: ${price}")
+            return price
     except Exception as e:
-        print(f"⚠️ تحذير: تعذر جلب السعر الحقيقي ({e})، سيتم استخدام السعر السابق احتياطياً.")
+        print(f"⚠️ تعذر الجلب من Binance ({e})، جاري تجربة البديل الأول (CoinGecko)...")
+
+    # 2. محاولة البديل الأول: CoinGecko
+    coingecko_url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    try:
+        req = urllib.request.Request(coingecko_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            price = float(data['bitcoin']['usd'])
+            print(f"✅ تم جلب السعر بنجاح من CoinGecko: ${price}")
+            return price
+    except Exception as e:
+        print(f"⚠️ تعذر الجلب من CoinGecko ({e})، جاري تجربة البديل الثاني (CoinCap)...")
+
+    # 3. محاولة البديل الثاني: CoinCap
+    coincap_url = "https://api.coincap.io/v2/assets/bitcoin"
+    try:
+        req = urllib.request.Request(coincap_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            price = float(data['data']['priceUsd'])
+            print(f"✅ تم جلب السعر بنجاح من CoinCap: ${price}")
+            return price
+    except Exception as e:
+        print(f"❌ فشل جلب السعر من جميع المصادر المتاحة ({e})، سيتم استخدام السعر السابق احتياطياً.")
         return None
 
 def decide_signal(change_pct):
@@ -68,19 +96,18 @@ def main():
 
     last_price = memory.get("last_btc_price", 64000.0)
     
-    # جلب السعر الحقيقي بدلاً من simulate_next_price العشوائية
+    # جلب السعر الحقيقي عبر نظام المصادر المتعددة والبدائل التلقائية
     real_price = fetch_real_bitcoin_price()
     new_price = real_price if real_price is not None else last_price
     
     change_pct = (new_price - last_price) / last_price if last_price > 0 else 0.0
     signal = decide_signal(change_pct)
 
-    # البند 2: حساب PnL حقيقي بناءً على فرق السعر الفعلي وحجم الرصيد
     current_balance = history.get("balance", 10000.0)
     if signal == "BULLISH_SIGNAL":
         net_pnl = round(current_balance * change_pct, 2)
     elif signal == "SELL_SIGNAL":
-        net_pnl = round(current_balance * abs(change_pct), 2)  # نجاح صفقة البيع على المكشوف عند انخفاض السعر
+        net_pnl = round(current_balance * abs(change_pct), 2)
     else:
         net_pnl = 0.0
 
