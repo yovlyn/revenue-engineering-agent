@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-def execute_paper_trade(signal, current_price):
+def execute_paper_trade(signal, current_price, previous_price=None):
     history_file = "trading_history.json"
     balance = 10000.0
     trades = []
@@ -21,7 +21,15 @@ def execute_paper_trade(signal, current_price):
         except Exception as e:
             print(f"Error reading history: {e}")
             
-    pnl = round(signal_to_pnl(signal), 2)
+    # إذا لم يُرسل السعر السابق، نجلب آخر سعر من السجل أو نعتبره نفس السعر الحالي
+    if previous_price is None:
+        if trades and isinstance(trades[-1], dict):
+            previous_price = trades[-1].get("entry_price", current_price)
+        else:
+            previous_price = current_price
+
+    # حساب الـ PnL الحقيقي بناءً على فرق السعر الفعلي والاتجاه (البند 2)
+    pnl = round(calculate_real_pnl(signal, previous_price, current_price, balance), 2)
     new_balance = round(balance + pnl, 2)
     
     new_trade = {
@@ -40,7 +48,6 @@ def execute_paper_trade(signal, current_price):
         "trades": trades
     }
     
-
     try:
         with open(history_file, "w") as f:
             json.dump(updated_data, f, indent=4)
@@ -49,12 +56,21 @@ def execute_paper_trade(signal, current_price):
         
     return updated_data
 
-def signal_to_pnl(signal):
-    import random
+def calculate_real_pnl(signal, prev_price, curr_price, current_balance):
+    """
+    البند 2: حساب PnL حقيقي بناءً على اتجاه السوق ونسبة تغير السعر الفعلية
+    """
+    if prev_price <= 0:
+        return 0.0
+        
+    price_change_pct = (curr_price - prev_price) / prev_price
+    
     if "BULLISH" in signal:
-        return random.uniform(50.0, 200.0)
+        # صفقة شراء (Long): تربح إذا صعد السعر وتخسر إذا هبط
+        return current_balance * price_change_pct
     elif "SELL" in signal:
-        return random.uniform(-80.0, 150.0)
+        # صفقة بيع (Short): تربح إذا هبط السعر وتخسر إذا صعد
+        return current_balance * (-price_change_pct)
     else:
-        return random.uniform(-30.0, 50.0)
-
+        # حالة الاستقرار (Dynamic Equilibrium) لا يوجد تغير أو نسبة طفيفة جداً
+        return 0.0
