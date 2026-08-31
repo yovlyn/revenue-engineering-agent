@@ -1,0 +1,10 @@
+{
+    "threshold": 0.48,
+    "last_error": 0.0,
+    "average_error": 0.0,
+    "adaptation_state": "STANDARD_OPTIMIZED",
+    "total_cycles": 1,
+    "errors": [
+        0.0
+    ]
+}
