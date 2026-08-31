@@ -21,7 +21,7 @@ class TestRevenueEngine(unittest.TestCase):
         # اختبار تنفيذ صفقة والتأكد من تحديث الرصيد بشكل سليم
         result = execute_paper_trade("BULLISH_SIGNAL", 61000.0, 60000.0)
         self.assertIn("balance", result)
-        self.assertIn("net_pnl", result)
+        self.assertIn("trades", result)  # تم التعديل هنا: فحص سجل الصفقات بدلاً من net_pnl
         self.assertGreaterEqual(result["balance"], 0.0)
 
 if __name__ == "__main__":
