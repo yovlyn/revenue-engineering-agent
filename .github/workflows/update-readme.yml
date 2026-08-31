@@ -1,8 +1,8 @@
-  name: Update README & Philosophy
+ name: Update README & Philosophy
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # كل 6 ساعات
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -43,4 +43,4 @@ jobs:
           delete-branch: true
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-  
+ 
