@@ -1,5 +1,5 @@
 import json
-import random
+import urllib.request
 import datetime
 import sys
 import os
@@ -20,14 +20,22 @@ def save_json(path, data):
     with open(path, "w") as f:
         json.dump(data, f, indent=4)
 
-def simulate_next_price(last_price):
-    change_pct = random.uniform(-0.008, 0.008)
-    return round(last_price * (1 + change_pct), 2)
+def fetch_real_bitcoin_price():
+    """البند 1: جلب السعر الحقيقي للبيتكوين من باينانس بدلاً من العشوائية"""
+    url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            return float(data['price'])
+    except Exception as e:
+        print(f"⚠️ تحذير: تعذر جلب السعر الحقيقي ({e})، سيتم استخدام السعر السابق احتياطياً.")
+        return None
 
 def decide_signal(change_pct):
-    if change_pct > 0.003:
+    if change_pct > 0.001:
         return "BULLISH_SIGNAL"
-    elif change_pct < -0.003:
+    elif change_pct < -0.001:
         return "SELL_SIGNAL"
     return "DYNAMIC_EQUILIBRIUM"
 
@@ -59,15 +67,24 @@ def main():
     history = load_json(HISTORY_FILE, {"balance": 10000.0, "total_trades": 0, "trades": []})
 
     last_price = memory.get("last_btc_price", 64000.0)
-    new_price = simulate_next_price(last_price)
-    change_pct = (new_price - last_price) / last_price
+    
+    # جلب السعر الحقيقي بدلاً من simulate_next_price العشوائية
+    real_price = fetch_real_bitcoin_price()
+    new_price = real_price if real_price is not None else last_price
+    
+    change_pct = (new_price - last_price) / last_price if last_price > 0 else 0.0
     signal = decide_signal(change_pct)
 
-    net_pnl = round(abs(change_pct) * history.get("balance", 10000.0) * random.uniform(0.3, 1.5), 2)
-    if signal == "SELL_SIGNAL" and change_pct < 0:
-        net_pnl = abs(net_pnl)  # profitable short-style close, kept consistent with prior log style
+    # البند 2: حساب PnL حقيقي بناءً على فرق السعر الفعلي وحجم الرصيد
+    current_balance = history.get("balance", 10000.0)
+    if signal == "BULLISH_SIGNAL":
+        net_pnl = round(current_balance * change_pct, 2)
+    elif signal == "SELL_SIGNAL":
+        net_pnl = round(current_balance * abs(change_pct), 2)  # نجاح صفقة البيع على المكشوف عند انخفاض السعر
+    else:
+        net_pnl = 0.0
 
-    new_balance = round(history.get("balance", 10000.0) + net_pnl, 2)
+    new_balance = round(current_balance + net_pnl, 2)
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     trade = {
@@ -79,7 +96,7 @@ def main():
     }
 
     history["trades"].append(trade)
-    history["trades"] = history["trades"][-20:]  # keep log bounded
+    history["trades"] = history["trades"][-20:]  
     history["balance"] = new_balance
     history["total_trades"] = history.get("total_trades", 0) + 1
 
@@ -136,7 +153,7 @@ def main():
 
 ---
 
-*Autonomous agent powered by Python, GitHub Actions, and paper-trading simulation. Not a live trading system.*
+*Autonomous agent powered by Python, GitHub Actions, and live market API. Not a live trading system.*
 """
 
     with open(README_FILE, "w") as f:
