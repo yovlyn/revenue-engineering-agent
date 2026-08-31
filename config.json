@@ -1,50 +1,5 @@
-import json
-import os
-
-def load_config():
-    config_file = "config.json"
-    default_config = {
-        "moving_average_window": 20,
-        "strategy_mode": "STANDARD",
-        "risk_tolerance": "MEDIUM"
-    }
-    if os.path.exists(config_file):
-        try:
-            with open(config_file, "r") as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"⚠️ تحذير: تعذر قراءة ملف الإعدادات ({e})، استخدام القيم الافتراضية.")
-    return default_config
-
-def decide_strategy_signal(current_price, historical_prices):
-    """
-    البند 5: استراتيجية تداول حقيقية تعتمد على المتوسط المتحرك (SMA) 
-    مستمدة من قيم نافذة الزمن في config.json
-    """
-    config = load_config()
-    window = config.get("moving_average_window", 20)
-    risk_tolerance = config.get("risk_tolerance", "MEDIUM")
-    
-    # تحديد نسبة الهامش (Buffer) بناءً على مستوى المخاطرة المقبول
-    buffer_map = {
-        "LOW": 0.005,    # 0.5% حذر أكبر
-        "MEDIUM": 0.002, # 0.2% توازن
-        "HIGH": 0.0005   # 0.05% حساسية عالية
-    }
-    tolerance = buffer_map.get(risk_tolerance, 0.002)
-    
-    # التحقق من توفر بيانات كافية لحساب المتوسط المتحرك
-    if not historical_prices or len(historical_prices) < window:
-        return "DYNAMIC_EQUILIBRIUM"
-        
-    # حساب المتوسط المتحرك البسيط (SMA) لآخر N شمعة حسب الإعدادات
-    recent_prices = historical_prices[-window:]
-    sma = sum(recent_prices) / len(recent_prices)
-    
-    # اتخاذ القرار بناءً على موقع السعر الحالي مقارنة بالمتوسط المتحرك مع مراعاة الهامش
-    if current_price > sma * (1 + tolerance):
-        return "BULLISH_SIGNAL"
-    elif current_price < sma * (1 - tolerance):
-        return "SELL_SIGNAL"
-    else:
-        return "DYNAMIC_EQUILIBRIUM"
+{
+  "moving_average_window": 20,
+  "strategy_mode": "STANDARD",
+  "risk_tolerance": "MEDIUM"
+}
