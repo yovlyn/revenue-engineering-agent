@@ -21,7 +21,7 @@ def calculate_rsi(prices, period=14):
     حساب مؤشر القوة النسبية (RSI) بناءً على الأسعار التاريخية
     """
     if len(prices) < period + 1:
-        return 50  محايد افتراضياً في حال عدم كفاية البيانات
+        return 50 # محايد افتراضياً في حال عدم كفاية البيانات
     
     gains = []
     losses = []
