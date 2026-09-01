@@ -1,6 +1,8 @@
 import math
 import json
 import urllib.request
+# استيراد محرك الاستراتيجية الذي طورناه
+from strategy_engine import decide_strategy_signal
 
 def calculate_sharpe_ratio(returns, risk_free_rate=0.01):
     if not returns:
@@ -26,50 +28,63 @@ def calculate_max_drawdown(equity_curve):
     return max_dd
 
 def fetch_historical_prices(symbol="BTCUSDT", interval="1d", limit=50):
-    """البند 3: جلب الأسعار التاريخية الحقيقية من باينانس بدلاً من المصفوفات المجمدة"""
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode())
-            # استخراج أسعار الإغلاق (Close prices) من الشموع التاريخية
             closes = [float(candle[4]) for candle in data]
             return closes
     except Exception as e:
         print(f"⚠️ تحذير: تعذر جلب البيانات التاريخية الحقيقية ({e})، استخدام مصفوفة احتياطية.")
-        # مصفوفة احتياطية آمنة في حال انقطاع الاتصال
         return [60000.0 + (i * 100) for i in range(50)]
 
 def run_real_backtest():
-    print("=== Institutional Backtest Engine: Live Historical API Mode ===")
+    print("=== Institutional Backtest Engine: Strategy-Linked Mode ===")
     
-    # جلب أسعار تاريخية حقيقية للبيتكوين وأخرى افتراضية للمؤشر القياسي كمقارنة
     prices = fetch_historical_prices(symbol="BTCUSDT", interval="1d", limit=50)
     
-    # حساب العوائد اليومية بناءً على الأسعار الحقيقية المسترجعة
-    historical_strategy_returns = []
-    for i in range(1, len(prices)):
-        ret = (prices[i] - prices[i-1]) / prices[i-1]
-        historical_strategy_returns.append(ret)
-        
-    # مؤشر قياسي (Benchmark) يحاكي أداء السوق بنسبة تغير قريبة أو مرجعية
-    historical_benchmark_returns = [r * 0.8 for r in historical_strategy_returns]
-
     initial_capital = 10000.0
-    
-    # محاكاة مسار رأس المال للاستراتيجية
     strategy_capital = initial_capital
-    strategy_equity = [strategy_capital]
-    for r in historical_strategy_returns:
-        strategy_capital *= (1 + r)
-        strategy_equity.append(strategy_capital)
-        
-    # محاكاة مسار رأس المال للمؤشر القياسي (Benchmark)
     benchmark_capital = initial_capital
+    
+    strategy_equity = [strategy_capital]
     benchmark_equity = [benchmark_capital]
-    for r in historical_benchmark_returns:
-        benchmark_capital *= (1 + r)
+    
+    historical_strategy_returns = []
+    historical_benchmark_returns = []
+    
+    # نبدأ من الشمعة التي تسمح بتوفر نافذة بيانات كافية للاستراتيجية
+    start_index = 20
+    
+    for i in range(start_index, len(prices)):
+        current_window = prices[:i]
+        current_price = prices[i]
+        prev_price = prices[i-1]
+        
+        # السوق الطبيعي العائد البسيط
+        market_return = (current_price - prev_price) / prev_price
+        historical_benchmark_returns.append(market_return)
+        benchmark_capital *= (1 + market_return)
         benchmark_equity.append(benchmark_capital)
+        
+        # استدعاء الإشارة من استراتيجيتنا المتقدمة (SMA + RSI)
+        signal = decide_strategy_signal(current_price, current_window)
+        
+        # تطبيق العائد بناءً على القرار الاستراتيجي
+        if signal == "BULLISH_SIGNAL":
+            # في حالة إشارة الشراء: نأخذ العائد كاملاً
+            strat_return = market_return
+        elif signal == "SELL_SIGNAL":
+            # في حالة إشارة البيع: نتجنب الخسارة أو نكون خارج السوق (عائد صفر أو كاش)
+            strat_return = 0.0 
+        else:
+            # حالة التوازن الديناميكي (حذر نصف العائد أو تذبذب طفيف)
+            strat_return = market_return * 0.5
+            
+        historical_strategy_returns.append(strat_return)
+        strategy_capital *= (1 + strat_return)
+        strategy_equity.append(strategy_capital)
         
     total_return = ((strategy_capital - initial_capital) / initial_capital) * 100
     benchmark_return = ((benchmark_capital - initial_capital) / initial_capital) * 100
@@ -82,10 +97,10 @@ def run_real_backtest():
         "Sharpe Ratio": round(sharpe, 2),
         "Max Drawdown (%)": round(max_dd, 2),
         "Final Portfolio Value": round(strategy_capital, 2),
-        "Dataset Type": "Live Historical API (Binance Klines)"
+        "Dataset Type": "Live Binance Klines + Real Strategy Logic"
     }
     
-    print(f"Live API Backtest Results: {results}")
+    print(f"Backtest Results with Strategy: {results}")
     return results
 
 if __name__ == "__main__":
