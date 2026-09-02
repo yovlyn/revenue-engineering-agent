@@ -26,12 +26,6 @@ jobs:
       - name: Run Main System
         run: python main.py
 
-      - name: List files (debug)
-        run: ls -la
-
-      - name: Run README Updater
-        run: python update_readme.py
-
       - name: Pull latest changes before commit
         run: |
           git config --global user.name "github-actions[bot]"
