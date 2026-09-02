@@ -1,4 +1,4 @@
-name: Self-Evaluation Workflow
+name: Full Evaluation & README Update
 
 on:
   workflow_dispatch:
@@ -26,6 +26,9 @@ jobs:
       - name: Run Main System
         run: python main.py
 
+      - name: List files (debug)
+        run: ls -la
+
       - name: Run README Updater
         run: python update_readme.py
 
@@ -38,5 +41,5 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Auto-update backtest performance and dynamic README via Strategy Engine"
+          commit_message: "Auto-update backtest performance and dynamic README"
           branch: main
