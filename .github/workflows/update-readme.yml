@@ -1,35 +1,39 @@
-name: Update Dashboard
+name: Self-Evaluation Workflow
 
 on:
-  schedule:
-    - cron: '0 * * * *'  # يتم تشغيله كل ساعة أو حسب رغبتك
   workflow_dispatch:
 
 jobs:
-  update:
+  evaluate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Main Script
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Run Backtest Engine (Strategy SMA + RSI)
+        run: python backtest_engine.py
+
+      - name: Run Main System
         run: python main.py
 
-      - name: Commit and Push Changes
+      - name: Pull latest changes before commit
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.io"
-          git add README.md memory_bank.json trading_history.json
-          git commit -m "chore: auto-update dashboard data [skip ci]" || exit 0
-          git push
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase || echo "No rebase needed"
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Auto-update backtest performance via Strategy Engine"
+          branch: main
