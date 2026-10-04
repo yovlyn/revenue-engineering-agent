@@ -1,5 +1,5 @@
 {
-  "moving_average_window": 20,
+  "moving_average_window": 10,
   "strategy_mode": "STANDARD",
   "risk_tolerance": "MEDIUM"
 }

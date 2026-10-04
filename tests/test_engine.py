@@ -11,9 +11,12 @@ from paper_trading import execute_paper_trade
 class TestRevenueEngine(unittest.TestCase):
     
     def test_strategy_signal_bullish(self):
-        # اختبار إشارة الصعود عندما يكون السعر أعلى من المتوسط المتحرك
-        prices = [100.0] * 25
-        current_price = 110.0
+        # اختبار إشارة الصعود: سعر أعلى من المتوسط + ميل صاعد + RSI ليس في تشبع شرائي
+        prices = [100.0, 99.0, 101.0, 98.0, 102.0, 100.0, 103.0,
+                  101.0, 104.0, 102.0, 105.0, 103.0, 106.0, 104.0,
+                  107.0, 105.0, 108.0, 106.0, 109.0, 107.0, 110.0,
+                  108.0, 111.0, 109.0, 112.0]
+        current_price = 115.0
         signal = decide_strategy_signal(current_price, prices)
         self.assertEqual(signal, "BULLISH_SIGNAL")
 

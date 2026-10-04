@@ -58,19 +58,18 @@ def execute_paper_trade(signal, current_price, previous_price=None):
 
 def calculate_real_pnl(signal, prev_price, curr_price, current_balance):
     """
-    البند 2: حساب PnL حقيقي بناءً على اتجاه السوق ونسبة تغير السعر الفعلية
+    حساب PnL حقيقي بناءً على اتجاه السوق ونسبة تغير السعر الفعلية.
+    SELL_SIGNAL هو خروج إلى الكاش (cash-exit)، وليس بيع مكشوف (short-selling):
+    العائد = 0% لأننا خارج السوق ولا نربح من هبوط السعر.
     """
     if prev_price <= 0:
         return 0.0
-        
+
     price_change_pct = (curr_price - prev_price) / prev_price
-    
+
     if "BULLISH" in signal:
-        # صفقة شراء (Long): تربح إذا صعد السعر وتخسر إذا هبط
         return current_balance * price_change_pct
     elif "SELL" in signal:
-        # صفقة بيع (Short): تربح إذا هبط السعر وتخسر إذا صعد
-        return current_balance * (-price_change_pct)
+        return 0.0
     else:
-        # حالة الاستقرار (Dynamic Equilibrium) لا يوجد تغير أو نسبة طفيفة جداً
         return 0.0

@@ -4,6 +4,9 @@ import datetime
 import sys
 import os
 
+from strategy_engine import decide_strategy_signal
+from backtest_engine import fetch_historical_prices
+
 MEMORY_FILE = "memory_bank.json"
 HISTORY_FILE = "trading_history.json"
 README_FILE = "README.md"
@@ -48,12 +51,32 @@ def main():
     last_price = memory.get("last_btc_price", 64000.0)
     real_price = fetch_real_bitcoin_price()
     new_price = real_price if real_price is not None else last_price
-    
-    change_pct = (new_price - last_price) / last_price if last_price > 0 else 0.0
-    signal = "BULLISH_SIGNAL" if change_pct > 0.001 else ("SELL_SIGNAL" if change_pct < -0.001 else "DYNAMIC_EQUILIBRIUM")
 
+    change_pct = (new_price - last_price) / last_price if last_price > 0 else 0.0
+
+    # Use the real SMA+RSI strategy engine instead of a crude price-change threshold.
+    # Fetch a historical price window so the strategy has enough data for its indicators.
+    historical_window = fetch_historical_prices(symbol="BTCUSDT", interval="1d", limit=30)
+    if historical_window and len(historical_window) >= 15:
+        # Replace the last candle with the live price we just fetched,
+        # so the strategy evaluates current market conditions with real-time data.
+        historical_window[-1] = new_price
+        signal = decide_strategy_signal(new_price, historical_window)
+    else:
+        # If historical data is unavailable, fall back to the simple threshold
+        # but log it explicitly so it's never mistaken for a real strategy signal.
+        signal = "BULLISH_SIGNAL" if change_pct > 0.001 else ("SELL_SIGNAL" if change_pct < -0.001 else "DYNAMIC_EQUILIBRIUM")
+        print("⚠️ Strategy engine unavailable (no historical data), using fallback threshold signal.")
+
+    # PnL is consistent with the cash-exit design:
+    # BULLISH_SIGNAL = in-market (earn market return)
+    # SELL_SIGNAL = cash exit (0% return, not short-selling)
+    # DYNAMIC_EQUILIBRIUM = cash (0% return)
     current_balance = history.get("balance", 10000.0)
-    net_pnl = round(current_balance * change_pct, 2) if signal != "DYNAMIC_EQUILIBRIUM" else 0.0
+    if signal == "BULLISH_SIGNAL":
+        net_pnl = round(current_balance * change_pct, 2)
+    else:
+        net_pnl = 0.0
     new_balance = round(current_balance + net_pnl, 2)
     timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
